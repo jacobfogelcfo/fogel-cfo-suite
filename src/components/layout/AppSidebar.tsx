@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   FileText,
@@ -9,6 +10,8 @@ import {
   FolderKanban,
   Settings,
   LogOut,
+  HandCoins,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrgSwitcher } from "./OrgSwitcher";
@@ -18,27 +21,38 @@ import { Button } from "@/components/ui/button";
 
 type NavItem = {
   to: string;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
-  feature?: string; // optional clients.config.features.<key>
+  feature?: string;
 };
 
 const universal: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/my-invoices", label: "My Invoices", icon: FileText },
-  { to: "/all-invoices", label: "All Invoices", icon: Inbox },
-  { to: "/needs-review", label: "Needs Review", icon: ClipboardCheck },
-  { to: "/vendors", label: "Vendors", icon: Building },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/members", label: "Members", icon: Users },
+  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/my-invoices", labelKey: "nav.my_invoices", icon: FileText },
+  { to: "/all-invoices", labelKey: "nav.all_invoices", icon: Inbox },
+  { to: "/needs-review", labelKey: "nav.needs_review", icon: ClipboardCheck },
+  { to: "/vendors", labelKey: "nav.vendors", icon: Building },
+  { to: "/projects", labelKey: "nav.projects", icon: FolderKanban },
+  { to: "/members", labelKey: "nav.members", icon: Users },
+];
+
+const featureGated: NavItem[] = [
+  { to: "/donations", labelKey: "nav.donations", icon: HandCoins, feature: "donations" },
+  { to: "/us-transfers", labelKey: "nav.us_transfers", icon: HandCoins, feature: "us_transfers" },
+  { to: "/bank-dashboard", labelKey: "nav.bank_dashboard", icon: Landmark, feature: "bank_dashboard" },
 ];
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { currentClient } = useClient();
+  const { t } = useTranslation();
 
-  const features = (currentClient?.config as { features?: Record<string, boolean> } | null)?.features ?? {};
-  const items = universal.filter((i) => !i.feature || features[i.feature]);
+  const features =
+    (currentClient?.config as { features?: Record<string, boolean> } | null)?.features ?? {};
+  const items = [
+    ...universal,
+    ...featureGated.filter((i) => !i.feature || features[i.feature]),
+  ];
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-e bg-card">
@@ -63,7 +77,7 @@ export function AppSidebar() {
                 }
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(item.labelKey)}</span>
               </NavLink>
             </li>
           ))}
@@ -71,9 +85,7 @@ export function AppSidebar() {
       </nav>
 
       <div className="border-t p-3 space-y-2">
-        <div className="px-2 py-1 text-xs text-muted-foreground truncate">
-          {user?.email}
-        </div>
+        <div className="px-2 py-1 text-xs text-muted-foreground truncate">{user?.email}</div>
         <NavLink
           to="/settings"
           className={({ isActive }) =>
@@ -86,7 +98,7 @@ export function AppSidebar() {
           }
         >
           <Settings className="h-4 w-4" />
-          <span>Settings</span>
+          <span>{t("nav.settings")}</span>
         </NavLink>
         <Button
           variant="ghost"
@@ -95,7 +107,7 @@ export function AppSidebar() {
           onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t("common.sign_out")}
         </Button>
       </div>
     </aside>
