@@ -1,0 +1,4 @@
+project_id = "your-project-id"
+
+[functions.extract-document]
+verify_jwt = true
