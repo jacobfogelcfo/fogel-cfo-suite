@@ -22,6 +22,7 @@ const FEATURE_KEYS = [
   "management",
   "vendors",
   "projects",
+  "qbo_auto_push",
 ] as const;
 
 export function OrganizationTab() {
