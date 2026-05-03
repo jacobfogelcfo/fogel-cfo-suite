@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { LanguageDirectionController } from "@/components/i18n/LanguageDirectionController";
+import { FloatingUploadButton } from "@/components/upload/FloatingUploadButton";
 
 export function AppLayout() {
   return (
@@ -10,6 +11,8 @@ export function AppLayout() {
       <main className="flex-1 overflow-x-hidden">
         <Outlet />
       </main>
+      <FloatingUploadButton />
     </div>
   );
 }
+
