@@ -2,3 +2,12 @@ project_id = "your-project-id"
 
 [functions.extract-document]
 verify_jwt = true
+
+[functions.qbo-oauth-start]
+verify_jwt = true
+
+[functions.qbo-oauth-callback]
+verify_jwt = false
+
+[functions.qbo-push-document]
+verify_jwt = true
