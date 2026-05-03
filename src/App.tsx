@@ -12,6 +12,9 @@ import AuthPage from "./pages/Auth";
 import ResetPasswordPage from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import SettingsPage from "./pages/Settings";
+import MyInvoices from "./pages/MyInvoices";
+import AllInvoices from "./pages/AllInvoices";
+import NeedsReview from "./pages/NeedsReview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -45,9 +48,9 @@ const App = () => (
                   }
                 >
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/my-invoices" element={<Stub title="My Invoices" />} />
-                  <Route path="/all-invoices" element={<Stub title="All Invoices" />} />
-                  <Route path="/needs-review" element={<Stub title="Needs Review" />} />
+                  <Route path="/my-invoices" element={<MyInvoices />} />
+                  <Route path="/all-invoices" element={<AllInvoices />} />
+                  <Route path="/needs-review" element={<NeedsReview />} />
                   <Route path="/vendors" element={<Stub title="Vendors" />} />
                   <Route path="/projects" element={<Stub title="Projects" />} />
                   <Route path="/members" element={<Stub title="Members" />} />
