@@ -1,5 +1,7 @@
-import { Building2, Check, ChevronsUpDown } from "lucide-react";
+import { Building2, Check, ChevronsUpDown, Plus } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
+import { useUserRole } from "@/contexts/UserRoleContext";
+import { CreateClientDialog } from "@/components/admin/CreateClientDialog";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
