@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClient } from "@/contexts/ClientContext";
 import { supabase } from "@/lib/supabase";
@@ -12,17 +13,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, UploadCloud, X } from "lucide-react";
+import { Loader2, UploadCloud, X, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-const ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.heic,.csv,.xlsx";
+const ACCEPT = {
+  "application/pdf": [".pdf"],
+  "image/png": [".png"],
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/webp": [".webp"],
+  "image/heic": [".heic"],
+  "text/csv": [".csv"],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+};
 
 function subtypeFor(mime: string, name: string): string {
   if (mime === "application/pdf") return "pdf";
@@ -43,18 +51,42 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
     .join("");
 }
 
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function UploadInvoiceDialog({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const { currentClient } = useClient();
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string>("");
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  const features = (currentClient?.config as any)?.features ?? {};
+  const multi = features.multi_invoice_per_request !== false;
+
+  const onDrop = useCallback(
+    (accepted: File[]) => {
+      if (!accepted.length) return;
+      setFiles((prev) => (multi ? [...prev, ...accepted] : accepted.slice(0, 1)));
+    },
+    [multi]
+  );
+
+  const { getRootProps, getInputProps, isDragActive, open: openPicker } = useDropzone({
+    onDrop,
+    accept: ACCEPT,
+    multiple: multi,
+    noClick: true,
+    noKeyboard: true,
+    disabled: busy,
+  });
 
   const reset = () => {
     setFiles([]);
     setProgress("");
-    if (inputRef.current) inputRef.current.value = "";
   };
 
   const submit = async () => {
@@ -148,24 +180,45 @@ export function UploadInvoiceDialog({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="files">Files</Label>
-            <Input
-              id="files"
-              ref={inputRef}
-              type="file"
-              accept={ACCEPT}
-              multiple
+          <div
+            {...getRootProps()}
+            className={cn(
+              "flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+              isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25",
+              busy && "opacity-50"
+            )}
+          >
+            <input {...getInputProps()} />
+            <UploadCloud className="h-10 w-10 text-muted-foreground" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {isDragActive
+                  ? "Drop files here"
+                  : `Drag PDF/image/CSV/XLSX here${multi ? "" : " (one file)"}`}
+              </p>
+              <p className="text-xs text-muted-foreground">or use the button below</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               disabled={busy}
-              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            />
+              onClick={openPicker}
+            >
+              Select file{multi ? "s" : ""}
+            </Button>
           </div>
 
           {files.length > 0 && (
-            <ul className="max-h-40 space-y-1 overflow-auto rounded-md border p-2 text-sm">
+            <div className="flex flex-wrap gap-2">
               {files.map((f, i) => (
-                <li key={i} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{f.name}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1 text-xs"
+                >
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="max-w-[180px] truncate">{f.name}</span>
+                  <span className="text-muted-foreground">{formatBytes(f.size)}</span>
                   {!busy && (
                     <button
                       onClick={() =>
@@ -174,12 +227,12 @@ export function UploadInvoiceDialog({ open, onOpenChange }: Props) {
                       className="text-muted-foreground hover:text-foreground"
                       aria-label="remove"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   )}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
 
           {progress && (
