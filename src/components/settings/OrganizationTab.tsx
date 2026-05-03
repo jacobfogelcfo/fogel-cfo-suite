@@ -57,7 +57,7 @@ export function OrganizationTab() {
   const save = async () => {
     setBusy(true);
     const cfg = { ...(currentClient.config ?? {}), features };
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("clients")
       .update({
         client_name: name,
@@ -68,9 +68,15 @@ export function OrganizationTab() {
         config: cfg,
         updated_by: provenanceUser(user?.id ?? ""),
       })
-      .eq("id", currentClient.id);
+      .eq("id", currentClient.id)
+      .select("id");
     setBusy(false);
     if (error) return toast.error(error.message);
+    if (!data || data.length === 0) {
+      return toast.error(
+        "No rows updated — your account doesn't have permission to edit this organization (RLS). Check that fn_is_super_admin / is_local_admin_for return true for your user."
+      );
+    }
     toast.success("Organization updated.");
     qc.invalidateQueries({ queryKey: ["accessible-clients"] });
   };
