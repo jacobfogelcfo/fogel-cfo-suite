@@ -121,7 +121,7 @@ export function UploadInvoiceDialog({ open, onOpenChange }: Props) {
           .from("source_documents")
           .insert({
             client_id: currentClient.id,
-            source_type: "upload",
+            source_type: "file_upload",
             source_subtype: subtype,
             raw_file_path: objectPath,
             file_name: file.name,
